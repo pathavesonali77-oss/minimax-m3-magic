@@ -10,8 +10,8 @@
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
-/** Backup writing model: a fast, high-quota Gemini flash model on the gateway. */
-const MODEL = "google/gemini-3.7-flash";
+/** Backup writing model on the Lovable gateway (no Gemini anywhere in this app). */
+const MODEL = "openai/gpt-5.4-mini";
 
 export type FallbackOptions = {
   system?: string;
@@ -41,8 +41,7 @@ export async function fallbackChat(user: string, opts: FallbackOptions = {}): Pr
             ...(opts.system ? [{ role: "system", content: opts.system }] : []),
             { role: "user", content: user },
           ],
-          temperature: opts.temperature ?? 0.7,
-          max_tokens: opts.maxOutputTokens ?? 32_768,
+          max_completion_tokens: opts.maxOutputTokens ?? 32_768,
         }),
       });
 

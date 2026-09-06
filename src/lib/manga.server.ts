@@ -213,7 +213,7 @@ export async function buildCharacterBible(script: string): Promise<string> {
     "thin wiry build, faded grey school shirt with frayed collar, small scar above left eyebrow. " +
     "No headings, no numbering, no extra commentary.";
 
-  // Gemini reads a million tokens, so the ENTIRE script goes in — no sampling,
+  // MiniMax M3 reads a million tokens, so the ENTIRE script goes in — no sampling,
   // no chunking. Characters introduced late are now covered like the rest.
   const body = script.length > MAX_SCRIPT_CHARS ? script.slice(0, MAX_SCRIPT_CHARS) : script;
 
