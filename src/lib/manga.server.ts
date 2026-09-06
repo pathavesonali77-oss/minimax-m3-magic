@@ -209,6 +209,10 @@ export async function buildCharacterBible(script: string): Promise<string> {
     "CRITICAL: determine each character's gender from the script (names, pronouns, relationships like brother/sister) " +
     "and make the gender the FIRST and most emphasized trait — write 'male' or 'female' explicitly plus a matching " +
     "noun (man/woman/boy/girl). Never guess wrong or leave gender ambiguous. " +
+    "CRITICAL: determine each character's AGE from the script (school grade, job, parenthood, being called old/young, " +
+    "family roles like grandfather/mother/child) and state it EXPLICITLY right after the gender: a number " +
+    "('17 years old', '45 years old') or an exact band ('elderly, over 65', 'middle-aged, 40 to 55', 'teenager', " +
+    "'young child'). Never leave age vague or write just 'young'/'old' — write the concrete age. " +
     "Output plain lines like: Henan: male, 17-year-old Indian boy, messy jet-black hair, dark brown eyes, tan skin, " +
     "thin wiry build, faded grey school shirt with frayed collar, small scar above left eyebrow. " +
     "No headings, no numbering, no extra commentary.";
@@ -267,9 +271,15 @@ const PROMPT_SYSTEM =
   "NEVER write a separate character description block, sheet, reference, lineup or 'plus portrait of'.\n" +
   "- CONSISTENCY: when a bible character DOES appear, repeat their bible traits (hair, eyes, clothing colours) using " +
   "the bible's own words. Never redesign, re-age or re-dress a character between shots.\n" +
-  "- GENDER ACCURACY (critical): every bible character is written with their name AND their exact gender using an " +
-  "explicit gendered noun. Never swap or reverse a character's gender. For side characters, pick one gender from the " +
-  "script context and state it explicitly, and keep it identical everywhere in the story.\n" +
+   "- GENDER ACCURACY (critical): every bible character is written with their name AND their exact gender using an " +
+   "explicit gendered noun. Never swap or reverse a character's gender. For side characters, pick one gender from the " +
+   "script context and state it explicitly, and keep it identical everywhere in the story.\n" +
+   "- AGE ACCURACY (critical): every bible character has a fixed age — copy it into every prompt they appear in " +
+   "('a 45-year-old man', 'an elderly woman with deep wrinkles', 'a 7-year-old child'). A character must look the " +
+   "SAME age in every panel: a child is never drawn adult, an old person is never drawn young, a teenager is never " +
+   "drawn middle-aged. Add the visible age markers the bible implies (wrinkles and grey hair for the elderly, small " +
+   "childlike stature and round face for a child). For unnamed side characters, state one explicit age and keep it " +
+   "consistent for the whole story.\n" +
   "- TWO OR MORE PEOPLE IN FRAME (critical): name each person separately with their gender and own distinct traits and " +
   "say where each one stands. Never write 'two figures' or 'the two of them', and never let one character's hair, " +
   "clothing or body type bleed onto the other.\n" +
@@ -622,13 +632,17 @@ export function enforceGender(prompt: string, bible?: string): string {
     }
   }
 
-  // Stamp the gender next to each name so the renderer cannot misread it.
+  // Stamp the gender AND the fixed age next to each name so the renderer
+  // cannot misread either — age drift (young drawn old and back) was a top
+  // complaint.
   for (const e of present) {
     const g = genderOf(e.traits)!;
     const noun = g === "male" ? "male man" : "female woman";
+    const age = ageOf(e.traits);
+    const tag = age ? `${noun}, ${age}` : noun;
     out = out.replace(
       new RegExp(`\\b${escapeRe(e.name)}\\b(?!\\s*\\((male|female)\\b)`, "g"),
-      `${e.name} (${noun})`,
+      `${e.name} (${tag})`,
     );
   }
 
