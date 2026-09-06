@@ -11,6 +11,7 @@
 - [x] Gemini removed entirely; writing now runs on MiniMax M3 (free) via OpenRouter,
       5 keys rotating one at a time with automatic switch on daily quota
 - [x] Prompts per pass raised 60 -> 300 (MiniMax output ceiling) to cut daily requests
+- [x] Keep timestamp scene/action dominant while applying compact age and gender identity locks
 
 ## Done
 - [x] Confirmed the text service allows 5 requests/min PER KEY (not 60) — 7 keys = 35/min total

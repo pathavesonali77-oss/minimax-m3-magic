@@ -51,7 +51,7 @@ export const NO_PEOPLE_GUARD =
 
 /** Added only when the scene does have named/described people. */
 export const CAST_GUARD =
-  "only the people described above are present, each drawn once, each with the exact gender stated for them, male characters unmistakably male and female characters unmistakably female, never swapped or blended";
+  "only the described cast is present, each person drawn once with their stated identity";
 
 /**
  * Anatomy guard. Panels came back with two figures sharing one shirt and fused
@@ -637,48 +637,26 @@ export function enforceGender(prompt: string, bible?: string): string {
     }
   }
 
-  // Stamp the gender AND the fixed age next to each name so the renderer
-  // cannot misread either — age drift (young drawn old and back) was a top
-  // complaint.
+  // Put one compact identity tag at the character's FIRST mention. Repeating
+  // long identity instructions after every name made Flux focus on generic
+  // portraits and ignore the timestamp's setting/action.
   for (const e of present) {
     const g = genderOf(e.traits)!;
-    const noun = g === "male" ? "male man" : "female woman";
+    const noun = g === "male" ? "male" : "female";
     const age = ageOf(e.traits);
     const tag = age ? `${noun}, ${age}` : noun;
-    out = out.replace(
-      new RegExp(`\\b${escapeRe(e.name)}\\b(?!\\s*\\((male|female)\\b)`, "g"),
-      `${e.name} (${tag})`,
-    );
+    out = out.replace(new RegExp(`\\b${escapeRe(e.name)}\\b(?!\\s*\\((male|female)\\b)`, "i"), `${e.name} (${tag})`);
   }
 
-  // With two or more people in frame the renderer tends to homogenise them —
-  // both drawn the same age, or both drawn the same gender. So each person is
-  // restated with their own gender AND own age, with the contrast spelled out.
-  // This also covers same-gender pairs of different ages (grandfather + boy),
-  // which the old males/females-only split missed entirely.
+  // A short cast ledger separates mixed pairs without drowning out the scene.
+  // Concrete labels work better with Flux than paragraphs of negative rules.
   if (present.length >= 2) {
     const desc = present.map((e) => {
       const g = genderOf(e.traits)!;
       const age = ageOf(e.traits);
-      const genderWord =
-        g === "male"
-          ? "clearly MALE (masculine face and body, male hairstyle and male clothing)"
-          : "clearly FEMALE (feminine face and body, female hairstyle and female clothing)";
-      return `${e.name} is ${genderWord}${age ? ` and ${age}` : ""}`;
+      return `${e.name}: ${g}${age ? `, ${age}` : ""}`;
     });
-    const ages = present.map((e) => ageOf(e.traits));
-    const differsInAge = new Set(ages.filter(Boolean)).size > 1;
-    const differsInGender =
-      new Set(present.map((e) => genderOf(e.traits))).size > 1;
-    out += `. In this frame ${desc.join("; ")}.`;
-    if (differsInAge || differsInGender) {
-      out +=
-        " They are DIFFERENT people at DIFFERENT stages of life: draw each one exactly as stated — " +
-        "never give them the same age, never make the young one older or the old one younger to match the other, " +
-        "and never swap, blend or feminise/masculinise their genders.";
-    } else {
-      out += " Do not swap, blend or merge their appearances.";
-    }
+    out += `. Distinct cast: ${desc.join("; ")}.`;
   }
   return out;
 }
@@ -708,24 +686,9 @@ export function characterLock(prompt: string, bible?: string): string {
 
 
 
-  return (
-    "Fixed character identity (age, gender and appearance must match exactly for every character, " +
-    "never swapped, blended, re-aged or changed between shots): " +
-    matched
-      .map((e) => {
-        const g = genderOf(e.traits);
-        const traits = e.traits.replace(/\.$/, "");
-        const age = ageOf(e.traits);
-        const head = g
-          ? `${e.name} is a ${g.toUpperCase()} ${g === "male" ? "man/boy" : "woman/girl"} — ${traits}`
-          : `${e.name} is ${traits}`;
-        return age ? `${head}; ${e.name} is ${age} and must look exactly ${age} in this image, never younger and never older` : head;
-      })
-      .join("; ") +
-    (matched.length >= 2
-      ? ". Keep each of these characters visually distinct from the others and give each one exactly the gender and age stated."
-      : ".")
-  );
+  return `Appearance lock: ${matched
+    .map((e) => `${e.name}: ${e.traits.replace(/\.$/, "")}`)
+    .join("; ")}.`;
 }
 
 /**
@@ -771,12 +734,12 @@ export function composeImagePrompt(prompt: string, bible?: string): string {
   const peopled = hasPeople(fixed, bible);
   // Character lock only matters when someone is actually in frame.
   const lock = peopled ? characterLock(fixed, bible) : "";
-  // Flux weights the earliest tokens most: a short style lead comes first so
-  // the webtoon look can never be truncated away, then the detailed scene,
-  // then the identity lock, then the (short, positively phrased) guards.
+  // Flux weights early tokens most. The timestamp-specific scene and action
+  // therefore come first; identity is compact and secondary. This prevents a
+  // multi-character lock from turning an unrelated line into a cast portrait.
   return (
-    `Full-colour webtoon manhwa style illustration, highly detailed: ${fixed}. ` +
-    `${lock ? lock + " " : ""}${TONE_LOCK}. ${STYLE}, ${NO_TEXT_GUARD}. ` +
+    `THIS EXACT STORY MOMENT: ${fixed}. ` +
+    `${lock ? lock + " " : ""}Full-colour webtoon manhwa style illustration, highly detailed. ${TONE_LOCK}. ${STYLE}, ${NO_TEXT_GUARD}. ` +
     `${peopled ? `${CAST_GUARD}. ${ANATOMY_GUARD}` : NO_PEOPLE_GUARD}. ${SINGLE_PANEL_GUARD}. ` +
     `16:9 widescreen cinematic framing.`
   );
