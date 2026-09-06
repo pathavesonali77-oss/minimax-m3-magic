@@ -651,17 +651,33 @@ export function enforceGender(prompt: string, bible?: string): string {
     );
   }
 
-  // With two or more people in frame the renderer tends to blend or swap
-  // genders, so state the split explicitly right after the scene text.
+  // With two or more people in frame the renderer tends to homogenise them —
+  // both drawn the same age, or both drawn the same gender. So each person is
+  // restated with their own gender AND own age, with the contrast spelled out.
+  // This also covers same-gender pairs of different ages (grandfather + boy),
+  // which the old males/females-only split missed entirely.
   if (present.length >= 2) {
-    const males = present.filter((e) => genderOf(e.traits) === "male").map((e) => e.name);
-    const females = present.filter((e) => genderOf(e.traits) === "female").map((e) => e.name);
-    if (males.length > 0 && females.length > 0) {
+    const desc = present.map((e) => {
+      const g = genderOf(e.traits)!;
+      const age = ageOf(e.traits);
+      const genderWord =
+        g === "male"
+          ? "clearly MALE (masculine face and body, male hairstyle and male clothing)"
+          : "clearly FEMALE (feminine face and body, female hairstyle and female clothing)";
+      return `${e.name} is ${genderWord}${age ? ` and ${age}` : ""}`;
+    });
+    const ages = present.map((e) => ageOf(e.traits));
+    const differsInAge = new Set(ages.filter(Boolean)).size > 1;
+    const differsInGender =
+      new Set(present.map((e) => genderOf(e.traits))).size > 1;
+    out += `. In this frame ${desc.join("; ")}.`;
+    if (differsInAge || differsInGender) {
       out +=
-        `. In this frame ${males.join(" and ")} ${males.length > 1 ? "are" : "is"} clearly MALE ` +
-        `(masculine face and body, male hairstyle and male clothing), and ` +
-        `${females.join(" and ")} ${females.length > 1 ? "are" : "is"} clearly FEMALE ` +
-        `(feminine face and body, female hairstyle and female clothing); do not swap, blend or feminise/masculinise them`;
+        " They are DIFFERENT people at DIFFERENT stages of life: draw each one exactly as stated — " +
+        "never give them the same age, never make the young one older or the old one younger to match the other, " +
+        "and never swap, blend or feminise/masculinise their genders.";
+    } else {
+      out += " Do not swap, blend or merge their appearances.";
     }
   }
   return out;
