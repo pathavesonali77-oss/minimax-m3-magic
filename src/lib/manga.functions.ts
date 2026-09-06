@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { parseScript } from "./script";
 import { buildCharacterBible, writePrompts, renderPanel } from "./manga.server";
-import { geminiStatus } from "./gemini.server";
+import { engineStatus } from "./openrouter.server";
 
 const SegmentSchema = z.object({
   index: z.number(),
@@ -21,7 +21,7 @@ export const analyzeScript = createServerFn({ method: "POST" })
       );
     }
     const bible = await buildCharacterBible(data.script);
-    return { segments, bible, engine: geminiStatus() };
+    return { segments, bible, engine: engineStatus() };
   });
 
 /**
@@ -46,7 +46,7 @@ export const promptsForRange = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const prompts = await writePrompts(data.bible, data.segments, data.from, data.to);
-    return { from: data.from, to: data.to, prompts, engine: geminiStatus() };
+    return { from: data.from, to: data.to, prompts, engine: engineStatus() };
   });
 
 export const renderImage = createServerFn({ method: "POST" })

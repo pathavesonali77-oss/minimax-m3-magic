@@ -2,9 +2,9 @@
  * API key pools.
  *
  * Image keys (Pixazo) are used in parallel — several renders at once.
- * Text keys (Gemini) are NEVER used in parallel: one key is active at a time
+ * Text keys (OpenRouter) are NEVER used in parallel: one key is active at a time
  * and the pool only advances when that key's daily quota is exhausted
- * (see gemini.server.ts).
+ * (see openrouter.server.ts).
  */
 
 function readPool(prefix: string): string[] {
@@ -24,9 +24,9 @@ export function pixazoKeys(): string[] {
   return keys;
 }
 
-export function geminiKeys(): string[] {
-  const keys = readPool("GEMINI_API_KEY");
-  if (keys.length === 0) throw new Error("Missing GEMINI_API_KEY");
+export function openrouterKeys(): string[] {
+  const keys = readPool("OPENROUTER_API_KEY");
+  if (keys.length === 0) throw new Error("Missing OPENROUTER_API_KEY");
   return keys;
 }
 

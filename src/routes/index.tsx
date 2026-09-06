@@ -57,12 +57,12 @@ const SAMPLE = `(0:00)Henan की कहानी असुरा का उद
 /**
  * Script lines written per prompt pass.
  *
- * There is no chunk analysis any more: Gemini reads the ENTIRE script on every
- * pass and only writes this many prompts at a time, because the reply length —
- * not the script length — is the real ceiling. Passes run one after another,
- * since the engine keeps a single key active at a time (5 requests/minute).
+ * The model reads the ENTIRE script on every pass and writes this many prompts
+ * at a time. MiniMax M3 answers with roughly 5x the output length of the old
+ * engine, so each pass covers 5x as many lines — far fewer requests per script,
+ * which is what protects the daily free-model allowance.
  */
-const PROMPT_RANGE = 60;
+const PROMPT_RANGE = 300;
 
 
 
@@ -232,7 +232,7 @@ function Index() {
       // Stage 1: prompts. The model reads the WHOLE script on every pass and
       // only writes the prompts for one range of line numbers (the answer, not
       // the input, is what has a size ceiling). Passes run one after another
-      // because the Gemini engine uses a single key at a time.
+      // because the text engine uses a single key at a time.
       // Stage 2 drains a shared queue as soon as prompts land, so image
       // rendering starts within seconds instead of after the last pass.
       const needPrompts = pending.filter((s) => !s.prompt);

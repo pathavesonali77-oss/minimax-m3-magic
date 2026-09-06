@@ -1,6 +1,6 @@
 import type { Segment } from "./script";
 import { pixazoKeys, pickKey } from "./keys.server";
-import { geminiChat } from "./gemini.server";
+import { openrouterChat } from "./openrouter.server";
 import { fallbackChat, hasFallback } from "./text-fallback.server";
 
 
@@ -63,9 +63,9 @@ export const ANATOMY_GUARD =
 
 
 /**
- * Every text call in the app goes through Gemini (see gemini.server.ts):
- * one key at a time, newest flash model first, automatic switch to the next
- * key when a daily quota runs out.
+ * Every text call in the app goes through MiniMax M3 (free) on OpenRouter
+ * (see openrouter.server.ts): one key at a time, with an automatic switch to
+ * the next key when a daily free-model quota runs out.
  */
 export async function textChat(
   system: string,
@@ -78,14 +78,14 @@ export async function textChat(
   } = {},
 ): Promise<string> {
   try {
-    return await geminiChat(user, { system, ...opts });
+    return await openrouterChat(user, { system, ...opts });
   } catch (e) {
-    // Every Gemini key unusable (expired/revoked key, or all daily quota gone):
+    // Every OpenRouter key unusable (expired/revoked key, or all daily quota gone):
     // keep writing through the backup engine instead of falling back to raw
     // script lines, which is what produced generic pictures.
     if (!hasFallback()) throw e;
     console.error(
-      "Gemini text engine unavailable, using backup engine:",
+      "MiniMax text engine unavailable, using backup engine:",
       e instanceof Error ? e.message : e,
     );
     return fallbackChat(user, {
@@ -303,7 +303,7 @@ function numberScript(all: Segment[]): string {
  * Writes image prompts for lines `from`..`to` (1-based, inclusive) while the
  * model reads the ENTIRE script.
  *
- * There is no chunk system any more: Gemini gets the full script and the full
+ * There is no chunk system any more: the model gets the full script and the full
  * character bible on every call, so continuity comes from the model actually
  * seeing the whole story rather than from stitched-together chunk briefs. A
  * pass only limits how many prompts are ASKED FOR at once, because the answer
@@ -331,7 +331,9 @@ export async function writePrompts(
       {
         temperature: temp,
         // ~200 tokens of prompt per line, plus head-room.
-        maxOutputTokens: Math.min(60_000, 2_000 + want.length * 320),
+        // MiniMax M3 has a far larger output ceiling than the old engine, so a
+        // whole pass of prompts fits in a single reply.
+        maxOutputTokens: Math.min(250_000, 4_000 + want.length * 340),
       },
     );
   };

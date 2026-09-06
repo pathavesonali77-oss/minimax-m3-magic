@@ -1,8 +1,8 @@
 /**
  * Backup text engine.
  *
- * The storyboard writing normally runs on the project's own Gemini keys, one key
- * at a time (see gemini.server.ts). If every one of those keys is unusable —
+ * The storyboard writing normally runs on the project's own OpenRouter keys,
+ * one key at a time (see openrouter.server.ts). If every one is unusable —
  * expired, revoked, or all out of daily quota — the whole run would otherwise
  * collapse into raw untranslated script lines. This fallback keeps writing
  * through Lovable AI so a run always produces real prompts.
