@@ -3,7 +3,6 @@ import { pixazoKeys, pickKey } from "./keys.server";
 import { openrouterChat } from "./openrouter.server";
 import { fallbackChat, hasFallback } from "./text-fallback.server";
 
-
 const PIXAZO_URL = "https://gateway.pixazo.ai/flux-1-schnell/v1/getData";
 
 /**
@@ -30,8 +29,6 @@ export const TONE_LOCK =
   "LIGHTING: natural, clear and well-exposed, exactly as the scene describes (bright daylight stays bright, " +
   "a night scene is a well-lit night scene); faces, eyes and every environment detail are fully visible";
 
-
-
 /**
  * Flux has NO negative prompt: every noun written here is a token the model can
  * draw. Long "no speech bubbles, no posters, no billboards..." lists were being
@@ -51,7 +48,7 @@ export const NO_PEOPLE_GUARD =
 
 /** Added only when the scene does have named/described people. */
 export const CAST_GUARD =
-  "only the people described above are present, each drawn once, each with the exact gender stated for them, male characters unmistakably male and female characters unmistakably female, never swapped or blended";
+  "only the described cast is present, each person drawn once with their stated identity";
 
 /**
  * Anatomy guard. Panels came back with two figures sharing one shirt and fused
@@ -59,8 +56,6 @@ export const CAST_GUARD =
  */
 export const ANATOMY_GUARD =
   "anatomically correct bodies, one head, two arms and two legs per person, every figure a complete separate body with its own clothing, clearly spaced apart, never fused, merged, overlapping into one another or duplicated";
-
-
 
 /**
  * Every text call in the app goes through MiniMax M3 (free) on OpenRouter
@@ -97,14 +92,12 @@ export async function textChat(
   }
 }
 
-
 function stripFences(s: string): string {
   return s
     .replace(/```(?:json)?/gi, "")
     .replace(/```/g, "")
     .trim();
 }
-
 
 /**
  * Forgiving reader for the prompt-writing answer.
@@ -183,7 +176,6 @@ function clean(v: string): string {
     .trim();
 }
 
-
 /**
  * Builds a compact, reusable character bible from the script.
  *
@@ -234,7 +226,6 @@ export async function buildCharacterBible(script: string): Promise<string> {
   return "";
 }
 
-
 const PROMPT_SYSTEM =
   "You are the storyboard artist of a richly detailed full-colour webtoon (manhwa) adaptation. You are given a " +
   "character bible and the COMPLETE script (Hindi/Hinglish/English), every line numbered with its timestamp. You are " +
@@ -271,23 +262,23 @@ const PROMPT_SYSTEM =
   "NEVER write a separate character description block, sheet, reference, lineup or 'plus portrait of'.\n" +
   "- CONSISTENCY: when a bible character DOES appear, repeat their bible traits (hair, eyes, clothing colours) using " +
   "the bible's own words. Never redesign, re-age or re-dress a character between shots.\n" +
-   "- GENDER ACCURACY (critical): every bible character is written with their name AND their exact gender using an " +
-   "explicit gendered noun. Never swap or reverse a character's gender. For side characters, pick one gender from the " +
-   "script context and state it explicitly, and keep it identical everywhere in the story.\n" +
-   "- AGE ACCURACY (critical): every bible character has a fixed age — copy it into every prompt they appear in " +
-   "('a 45-year-old man', 'an elderly woman with deep wrinkles', 'a 7-year-old child'). A character must look the " +
-   "SAME age in every panel: a child is never drawn adult, an old person is never drawn young, a teenager is never " +
-   "drawn middle-aged. Add the visible age markers the bible implies (wrinkles and grey hair for the elderly, small " +
-   "childlike stature and round face for a child). For unnamed side characters, state one explicit age and keep it " +
-   "consistent for the whole story.\n" +
-   "- TWO OR MORE PEOPLE IN FRAME (critical): name each person separately with their gender, their own EXACT age and " +
-   "their own distinct traits, and say where each one stands. Never write 'two figures' or 'the two of them', and " +
-   "never let one character's hair, clothing, age or body type bleed onto the other.\n" +
-   "- MIXED PAIRS (critical): when two people in one frame differ in age or gender, write the CONTRAST explicitly " +
-   "next to both of them — 'Ravi, a clearly MALE elderly man with deep wrinkles and white hair, beside Meena, a " +
-   "clearly FEMALE 8-year-old girl, small and round-faced'. Never make a young character look the same age as the " +
-   "older one beside them, never age a child up or an elder down to match the other person, and never draw a male " +
-   "character feminine (or a female one masculine) just because they share the frame with the opposite gender.\n" +
+  "- GENDER ACCURACY (critical): every bible character is written with their name AND their exact gender using an " +
+  "explicit gendered noun. Never swap or reverse a character's gender. For side characters, pick one gender from the " +
+  "script context and state it explicitly, and keep it identical everywhere in the story.\n" +
+  "- AGE ACCURACY (critical): every bible character has a fixed age — copy it into every prompt they appear in " +
+  "('a 45-year-old man', 'an elderly woman with deep wrinkles', 'a 7-year-old child'). A character must look the " +
+  "SAME age in every panel: a child is never drawn adult, an old person is never drawn young, a teenager is never " +
+  "drawn middle-aged. Add the visible age markers the bible implies (wrinkles and grey hair for the elderly, small " +
+  "childlike stature and round face for a child). For unnamed side characters, state one explicit age and keep it " +
+  "consistent for the whole story.\n" +
+  "- TWO OR MORE PEOPLE IN FRAME (critical): name each person separately with their gender, their own EXACT age and " +
+  "their own distinct traits, and say where each one stands. Never write 'two figures' or 'the two of them', and " +
+  "never let one character's hair, clothing, age or body type bleed onto the other.\n" +
+  "- MIXED PAIRS (critical): when two people in one frame differ in age or gender, write the CONTRAST explicitly " +
+  "next to both of them — 'Ravi, a clearly MALE elderly man with deep wrinkles and white hair, beside Meena, a " +
+  "clearly FEMALE 8-year-old girl, small and round-faced'. Never make a young character look the same age as the " +
+  "older one beside them, never age a child up or an elder down to match the other person, and never draw a male " +
+  "character feminine (or a female one masculine) just because they share the frame with the opposite gender.\n" +
   "- HEAD COUNT: state explicitly how many people are in frame and that nobody else is present.\n" +
   "- Exactly one scene, one moment, one instance of each character. Never ask for multiple panels, insets or collages.\n" +
   "- NO-CHARACTER LINES (critical): if the line describes only a place, an object, the sky, weather or a phenomenon and " +
@@ -302,8 +293,6 @@ const PROMPT_SYSTEM =
   "that script line's own number, then ') ', then the whole prompt on that same single line. Example:\n" +
   "37) In the sunlit courtyard, Henan, a male 17-year-old boy ...\n38) Close-up of ...\n" +
   "No JSON, no quotes, no brackets, no bullets, no headings, no blank lines, and never break one prompt across lines.";
-
-
 
 /** Hard ceiling on how much script text is pasted into one request. */
 const MAX_SCRIPT_CHARS = 600_000;
@@ -362,7 +351,8 @@ export async function writePrompts(
     const parsed = parseNumberedList(raw, all.length);
     const entries: { n: number; text: string }[] = [];
     parsed.forEach((v, idx) => {
-      if (typeof v === "string" && v.trim().length > 30) entries.push({ n: idx + 1, text: v.trim() });
+      if (typeof v === "string" && v.trim().length > 30)
+        entries.push({ n: idx + 1, text: v.trim() });
     });
     if (entries.length === 0) return;
 
@@ -412,7 +402,10 @@ export async function writePrompts(
     try {
       absorb(await ask([n], 0.4), [n]);
     } catch (e) {
-      console.error(`writePrompts single-line repair failed for ${n}:`, e instanceof Error ? e.message : e);
+      console.error(
+        `writePrompts single-line repair failed for ${n}:`,
+        e instanceof Error ? e.message : e,
+      );
     }
   }
 
@@ -447,8 +440,6 @@ export function chainContinuity(prompts: string[]): string[] {
   return prompts;
 }
 
-
-
 /** True when a string is mostly Latin-script text the image engine can read. */
 export function isEnglishish(s: string): boolean {
   const letters = s.replace(/[^\p{L}]/gu, "");
@@ -472,25 +463,44 @@ function fallbackPrompt(s: Segment, action?: string): string {
   );
 }
 
-
-
 /** Phrases that make Flux draw letterforms. Replaced with a neutral equivalent. */
 const TEXT_TRIGGERS: [RegExp, string][] = [
-  [/\b(sign(board|age)?s?|street sign|shop sign)\b\s*(that\s+)?(reads?|saying|says)?[^,.]*/gi, "weathered wall"],
-  [/\b(poster|posters|billboard|billboards|banner|banners|placard|flyer|leaflet|brochure)\b/gi, "bare wall"],
+  [
+    /\b(sign(board|age)?s?|street sign|shop sign)\b\s*(that\s+)?(reads?|saying|says)?[^,.]*/gi,
+    "weathered wall",
+  ],
+  [
+    /\b(poster|posters|billboard|billboards|banner|banners|placard|flyer|leaflet|brochure)\b/gi,
+    "bare wall",
+  ],
   // Paper props only when they are the object itself. A trailing noun means the
   // word is an adjective for real furniture ("ticket machine", "note board"),
   // which must be left intact — rewriting it produced nonsense like
   // "a small worn paper object machine on the wall".
-  [/\b(newspaper|newspapers|magazine|magazines|letter|letters|envelope|note|notes|notebook|diary|book page|pages of a book|document|documents|contract|receipt|ticket|label|labels|tag|tags)\b(?!\s+(machine|machines|counter|booth|stand|window|holder|dispenser|rack|box|board|shelf|kiosk|gate|barrier|office|hall|desk))/gi, "worn paper object"],
-  [/\b(text|texts|writing|written words?|words?\s+written|caption|captions|subtitle|subtitles|title card|handwriting|calligraphy|graffiti|inscription|slogan|logo|logos|brand name|watermark|number plate|license plate|numberplate)\b/gi, ""],
+  [
+    /\b(newspaper|newspapers|magazine|magazines|letter|letters|envelope|note|notes|notebook|diary|book page|pages of a book|document|documents|contract|receipt|ticket|label|labels|tag|tags)\b(?!\s+(machine|machines|counter|booth|stand|window|holder|dispenser|rack|box|board|shelf|kiosk|gate|barrier|office|hall|desk))/gi,
+    "worn paper object",
+  ],
+  [
+    /\b(text|texts|writing|written words?|words?\s+written|caption|captions|subtitle|subtitles|title card|handwriting|calligraphy|graffiti|inscription|slogan|logo|logos|brand name|watermark|number plate|license plate|numberplate)\b/gi,
+    "",
+  ],
   [/\b(that|which)\s+(reads?|says?)\b[^,.]*/gi, ""],
   [/\breading\s+(a|an|the)\s+\w+/gi, "holding an object"],
-  [/\b(screen|display|monitor|phone screen|laptop screen)\s+(showing|displaying|with)\b[^,.]*/gi, "dark glowing screen"],
+  [
+    /\b(screen|display|monitor|phone screen|laptop screen)\s+(showing|displaying|with)\b[^,.]*/gi,
+    "dark glowing screen",
+  ],
   // Balloons/lettering furniture: naming them at all makes Flux draw them.
   [/\b(speech|thought|dialogue|word)\s*(bubble|balloon)s?\b/gi, ""],
-  [/\b(comic|manga|manhwa|webtoon)\s+(page|panel|panels|strip|layout|gutters?)\b/gi, "illustration"],
-  [/\b(says?|saying|shouts?|shouting|whispers?|whispering|yells?|screams?|mutters?|exclaims?)\s*[,:]?\s*["“][^"”]{0,160}["”']/gi, ""],
+  [
+    /\b(comic|manga|manhwa|webtoon)\s+(page|panel|panels|strip|layout|gutters?)\b/gi,
+    "illustration",
+  ],
+  [
+    /\b(says?|saying|shouts?|shouting|whispers?|whispering|yells?|screams?|mutters?|exclaims?)\s*[,:]?\s*["“][^"”]{0,160}["”']/gi,
+    "",
+  ],
   [/"[^"]{0,120}"/g, ""],
   // Single quotes: ONLY a genuine quoted span. The old /'[^']{2,120}'/ treated
   // two possessive apostrophes as a pair and deleted everything between them —
@@ -499,7 +509,6 @@ const TEXT_TRIGGERS: [RegExp, string][] = [
   // letters (that is a possessive or a contraction, not a quote).
   [/(?<![A-Za-z0-9])'(?=\S)[^'\n]{2,120}(?<=\S)'(?![A-Za-z0-9])/g, ""],
   [/“[^”]{0,120}”/g, ""],
-
 ];
 
 /**
@@ -508,12 +517,30 @@ const TEXT_TRIGGERS: [RegExp, string][] = [
  * rewritten into the visible human reaction instead.
  */
 const METAPHOR_TRIGGERS: [RegExp, string][] = [
-  [/\b(lungs?|chest|throat|veins?|blood|body|skin|heart|soul|mind|nerves?)\s+(burning|on fire|aflame|ablaze|engulfed in flames?|filled with fire|searing with fire)\b/gi, "face contorted in pain, hand clutching the chest"],
-  [/\b(fire|flames?|embers?|lightning|electricity|energy)\s+(erupting|bursting|pouring|radiating|spreading)\s+(from|out of|through)\s+(his|her|their|the)\s+(chest|body|lungs?|throat|skin|veins?|mouth|eyes)\b/gi, "body tensed, breath sharp, expression strained"],
-  [/\b(glowing|luminous|visible|exposed|raw|pulsing)\s+(organs?|flesh|muscle|lungs?|veins?|anatomy|innards?)\b/gi, "strained expression"],
-  [/\b(soul|spirit|consciousness|essence)\s+(torn|ripped|wrenched|extracted|pulled|dragged)\s+\w*\s*(from|out of)[^,.]*/gi, "whole body convulsing, eyes wide with shock"],
-  [/\b(x-?ray|anatomical cutaway|see-through body|transparent body|internal organs? view)\b/gi, "normal opaque body"],
-  [/\b(surreal|symbolic|abstract|metaphorical|dreamlike|otherworldly)\s+(imagery|vision|representation|overlay|effect)s?\b/gi, "grounded realistic depiction"],
+  [
+    /\b(lungs?|chest|throat|veins?|blood|body|skin|heart|soul|mind|nerves?)\s+(burning|on fire|aflame|ablaze|engulfed in flames?|filled with fire|searing with fire)\b/gi,
+    "face contorted in pain, hand clutching the chest",
+  ],
+  [
+    /\b(fire|flames?|embers?|lightning|electricity|energy)\s+(erupting|bursting|pouring|radiating|spreading)\s+(from|out of|through)\s+(his|her|their|the)\s+(chest|body|lungs?|throat|skin|veins?|mouth|eyes)\b/gi,
+    "body tensed, breath sharp, expression strained",
+  ],
+  [
+    /\b(glowing|luminous|visible|exposed|raw|pulsing)\s+(organs?|flesh|muscle|lungs?|veins?|anatomy|innards?)\b/gi,
+    "strained expression",
+  ],
+  [
+    /\b(soul|spirit|consciousness|essence)\s+(torn|ripped|wrenched|extracted|pulled|dragged)\s+\w*\s*(from|out of)[^,.]*/gi,
+    "whole body convulsing, eyes wide with shock",
+  ],
+  [
+    /\b(x-?ray|anatomical cutaway|see-through body|transparent body|internal organs? view)\b/gi,
+    "normal opaque body",
+  ],
+  [
+    /\b(surreal|symbolic|abstract|metaphorical|dreamlike|otherworldly)\s+(imagery|vision|representation|overlay|effect)s?\b/gi,
+    "grounded realistic depiction",
+  ],
 ];
 
 /**
@@ -523,11 +550,23 @@ const METAPHOR_TRIGGERS: [RegExp, string][] = [
  * rain, a candle) are left alone — only the atmosphere adjectives go.
  */
 const DARK_TRIGGERS: [RegExp, string][] = [
-  [/\b(moody|gloomy|murky|ominous|foreboding|eerie|sinister|brooding|noir|mysterious|shadowy|dimly[- ]lit|dim|low[- ]key|chiaroscuro|oppressive|bleak|desaturated|muted)\s+(lighting|light|atmosphere|mood|tone|palette|colou?rs?|shadows?|room|scene|interior|street|corridor)\b/gi, "clear well-lit $2"],
-  [/\b(thick|deep|heavy|pitch|near|total|enveloping|swallowing)\s+(darkness|shadow|shadows|gloom|black)\b/gi, "soft natural light"],
-  [/\b(in|into|through|from|within|amid)\s+(the\s+)?(darkness|gloom|shadows|murk)\b/gi, "$1 the light"],
+  [
+    /\b(moody|gloomy|murky|ominous|foreboding|eerie|sinister|brooding|noir|mysterious|shadowy|dimly[- ]lit|dim|low[- ]key|chiaroscuro|oppressive|bleak|desaturated|muted)\s+(lighting|light|atmosphere|mood|tone|palette|colou?rs?|shadows?|room|scene|interior|street|corridor)\b/gi,
+    "clear well-lit $2",
+  ],
+  [
+    /\b(thick|deep|heavy|pitch|near|total|enveloping|swallowing)\s+(darkness|shadow|shadows|gloom|black)\b/gi,
+    "soft natural light",
+  ],
+  [
+    /\b(in|into|through|from|within|amid)\s+(the\s+)?(darkness|gloom|shadows|murk)\b/gi,
+    "$1 the light",
+  ],
   [/\b(hard|harsh|deep|long|heavy|dramatic)\s+shadows?\b/gi, "soft shadows"],
-  [/\b(moody|gloomy|murky|ominous|foreboding|eerie|sinister|brooding|noir|mysterious|shadowy|dimly[- ]lit|low[- ]key|oppressive|bleak)\b,?\s*/gi, ""],
+  [
+    /\b(moody|gloomy|murky|ominous|foreboding|eerie|sinister|brooding|noir|mysterious|shadowy|dimly[- ]lit|low[- ]key|oppressive|bleak)\b,?\s*/gi,
+    "",
+  ],
   [/\b(dark|dim)\s+(and|,)\s+(mysterious|moody|gloomy|eerie)\b/gi, "clearly lit"],
 ];
 
@@ -637,52 +676,32 @@ export function enforceGender(prompt: string, bible?: string): string {
     }
   }
 
-  // Stamp the gender AND the fixed age next to each name so the renderer
-  // cannot misread either — age drift (young drawn old and back) was a top
-  // complaint.
+  // Put one compact identity tag at the character's FIRST mention. Repeating
+  // long identity instructions after every name made Flux focus on generic
+  // portraits and ignore the timestamp's setting/action.
   for (const e of present) {
     const g = genderOf(e.traits)!;
-    const noun = g === "male" ? "male man" : "female woman";
+    const noun = g === "male" ? "male" : "female";
     const age = ageOf(e.traits);
     const tag = age ? `${noun}, ${age}` : noun;
     out = out.replace(
-      new RegExp(`\\b${escapeRe(e.name)}\\b(?!\\s*\\((male|female)\\b)`, "g"),
+      new RegExp(`\\b${escapeRe(e.name)}\\b(?!\\s*\\((male|female)\\b)`, "i"),
       `${e.name} (${tag})`,
     );
   }
 
-  // With two or more people in frame the renderer tends to homogenise them —
-  // both drawn the same age, or both drawn the same gender. So each person is
-  // restated with their own gender AND own age, with the contrast spelled out.
-  // This also covers same-gender pairs of different ages (grandfather + boy),
-  // which the old males/females-only split missed entirely.
+  // A short cast ledger separates mixed pairs without drowning out the scene.
+  // Concrete labels work better with Flux than paragraphs of negative rules.
   if (present.length >= 2) {
     const desc = present.map((e) => {
       const g = genderOf(e.traits)!;
       const age = ageOf(e.traits);
-      const genderWord =
-        g === "male"
-          ? "clearly MALE (masculine face and body, male hairstyle and male clothing)"
-          : "clearly FEMALE (feminine face and body, female hairstyle and female clothing)";
-      return `${e.name} is ${genderWord}${age ? ` and ${age}` : ""}`;
+      return `${e.name}: ${g}${age ? `, ${age}` : ""}`;
     });
-    const ages = present.map((e) => ageOf(e.traits));
-    const differsInAge = new Set(ages.filter(Boolean)).size > 1;
-    const differsInGender =
-      new Set(present.map((e) => genderOf(e.traits))).size > 1;
-    out += `. In this frame ${desc.join("; ")}.`;
-    if (differsInAge || differsInGender) {
-      out +=
-        " They are DIFFERENT people at DIFFERENT stages of life: draw each one exactly as stated — " +
-        "never give them the same age, never make the young one older or the old one younger to match the other, " +
-        "and never swap, blend or feminise/masculinise their genders.";
-    } else {
-      out += " Do not swap, blend or merge their appearances.";
-    }
+    out += `. Distinct cast: ${desc.join("; ")}.`;
   }
   return out;
 }
-
 
 function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -701,31 +720,12 @@ export function characterLock(prompt: string, bible?: string): string {
   // into any panel containing "he"/"she" — including panels about soldiers,
   // crowds and strangers — which is exactly how narration lines turned into
   // generic "main couple standing somewhere" pictures. No name, no lock.
-  const matched = entries.filter((e) =>
-    new RegExp(`\\b${escapeRe(e.name)}\\b`, "i").test(prompt),
-  );
+  const matched = entries.filter((e) => new RegExp(`\\b${escapeRe(e.name)}\\b`, "i").test(prompt));
   if (matched.length === 0) return "";
 
-
-
-  return (
-    "Fixed character identity (age, gender and appearance must match exactly for every character, " +
-    "never swapped, blended, re-aged or changed between shots): " +
-    matched
-      .map((e) => {
-        const g = genderOf(e.traits);
-        const traits = e.traits.replace(/\.$/, "");
-        const age = ageOf(e.traits);
-        const head = g
-          ? `${e.name} is a ${g.toUpperCase()} ${g === "male" ? "man/boy" : "woman/girl"} — ${traits}`
-          : `${e.name} is ${traits}`;
-        return age ? `${head}; ${e.name} is ${age} and must look exactly ${age} in this image, never younger and never older` : head;
-      })
-      .join("; ") +
-    (matched.length >= 2
-      ? ". Keep each of these characters visually distinct from the others and give each one exactly the gender and age stated."
-      : ".")
-  );
+  return `Appearance lock: ${matched
+    .map((e) => `${e.name}: ${e.traits.replace(/\.$/, "")}`)
+    .join("; ")}.`;
 }
 
 /**
@@ -735,15 +735,21 @@ export function characterLock(prompt: string, bible?: string): string {
  */
 export function ageOf(traits: string): string {
   const t = traits.toLowerCase();
-  const num = /\b(\d{1,2})\s*(?:-|\s)?(?:to|–|-)?\s*(\d{1,2})?\s*(?:-|\s)?year[s]?[- ]old\b/.exec(t);
+  const num = /\b(\d{1,2})\s*(?:-|\s)?(?:to|–|-)?\s*(\d{1,2})?\s*(?:-|\s)?year[s]?[- ]old\b/.exec(
+    t,
+  );
   if (num) {
-    return num[2]
-      ? `${num[1]}-${num[2]} years old`
-      : `exactly ${num[1]} years old`;
+    return num[2] ? `${num[1]}-${num[2]} years old` : `exactly ${num[1]} years old`;
   }
   const bands: [RegExp, string][] = [
-    [/\b(elderly|old|aged|ancient|grand(mother|father|ma|pa)|buzurg|budhi|budha)\b/, "elderly, clearly aged 65 or older, with deeply wrinkled skin, sagging features and grey or white hair"],
-    [/\b(middle[- ]aged|forties|fifties|40s|50s)\b/, "middle-aged, clearly 40 to 55, with faint lines on the face"],
+    [
+      /\b(elderly|old|aged|ancient|grand(mother|father|ma|pa)|buzurg|budhi|budha)\b/,
+      "elderly, clearly aged 65 or older, with deeply wrinkled skin, sagging features and grey or white hair",
+    ],
+    [
+      /\b(middle[- ]aged|forties|fifties|40s|50s)\b/,
+      "middle-aged, clearly 40 to 55, with faint lines on the face",
+    ],
     [/\b(young adult|twenties|thirties|20s|30s)\b/, "a young adult in their twenties or thirties"],
     [/\b(teen(age[rd]?)?|adolescent|schoolboy|schoolgirl)\b/, "a teenager, clearly 13 to 18"],
     [/\b(child|kid|little (boy|girl)|toddler|infant|baby)\b/, "a young child"],
@@ -752,14 +758,15 @@ export function ageOf(traits: string): string {
   return "";
 }
 
-
-
 /** True when the prompt describes at least one human in frame. */
 export function hasPeople(prompt: string, bible?: string): boolean {
   const p = prompt.toLowerCase();
   if (/\bno (people|figures?|characters?|humans?)\b|\bempty environment\b|\bunpopulated\b/.test(p))
     return false;
-  if (bible && parseBible(bible).some((e) => new RegExp(`\\b${escapeRe(e.name)}\\b`, "i").test(prompt)))
+  if (
+    bible &&
+    parseBible(bible).some((e) => new RegExp(`\\b${escapeRe(e.name)}\\b`, "i").test(prompt))
+  )
     return true;
   return /\b(man|men|woman|women|boy|boys|girl|girls|child|children|person|people|crowd|figure|silhouette|soldier|guard|villager|student|teacher|shopkeeper|worker|stranger|face|faces|he|she|they)\b/.test(
     p,
@@ -771,16 +778,15 @@ export function composeImagePrompt(prompt: string, bible?: string): string {
   const peopled = hasPeople(fixed, bible);
   // Character lock only matters when someone is actually in frame.
   const lock = peopled ? characterLock(fixed, bible) : "";
-  // Flux weights the earliest tokens most: a short style lead comes first so
-  // the webtoon look can never be truncated away, then the detailed scene,
-  // then the identity lock, then the (short, positively phrased) guards.
+  // Flux weights early tokens most. The timestamp-specific scene and action
+  // therefore come first; identity is compact and secondary. This prevents a
+  // multi-character lock from turning an unrelated line into a cast portrait.
   return (
-    `Full-colour webtoon manhwa style illustration, highly detailed: ${fixed}. ` +
-    `${lock ? lock + " " : ""}${TONE_LOCK}. ${STYLE}, ${NO_TEXT_GUARD}. ` +
+    `THIS EXACT STORY MOMENT: ${fixed}. ` +
+    `${lock ? lock + " " : ""}Full-colour webtoon manhwa style illustration, highly detailed. ${TONE_LOCK}. ${STYLE}, ${NO_TEXT_GUARD}. ` +
     `${peopled ? `${CAST_GUARD}. ${ANATOMY_GUARD}` : NO_PEOPLE_GUARD}. ${SINGLE_PANEL_GUARD}. ` +
     `16:9 widescreen cinematic framing.`
   );
-
 }
 
 /**
@@ -832,7 +838,6 @@ async function isRealImage(url: string): Promise<boolean> {
   }
 }
 
-
 /** Calls Flux.1 Schnell (free tier) at max quality with automatic retries. Always 16:9. */
 export async function generateImage(
   prompt: string,
@@ -841,7 +846,6 @@ export async function generateImage(
   bible?: string,
   attempts = 6,
 ): Promise<string> {
-
   const keys = pixazoKeys();
   const body = composeImagePrompt(prompt, bible).slice(0, 2000);
 
@@ -907,22 +911,34 @@ export function promptVariant(prompt: string, level: number, line?: string): str
   // 1 — shorten: keep the first sentences (subject, action, setting) only.
   if (level === 1) {
     const parts = base.split(/(?<=[.!?])\s+/).filter(Boolean);
-    return parts.slice(0, Math.max(2, Math.ceil(parts.length / 2))).join(" ").slice(0, 600);
+    return parts
+      .slice(0, Math.max(2, Math.ceil(parts.length / 2)))
+      .join(" ")
+      .slice(0, 600);
   }
 
   // 2 — soften: replace wording the free renderer commonly refuses, and drop
   // decorative clauses in brackets.
   if (level === 2) {
     const soft: [RegExp, string][] = [
-      [/\b(blood|bloody|bleeding|gore|gory|mutilated|dismembered|corpse|corpses|dead bodies?|severed)\b/gi, "aftermath"],
-      [/\b(kill(s|ing|ed)?|murder(s|ing|ed)?|slaughter(s|ing|ed)?|massacre(s|d)?|stab(s|bing|bed)?|torture(s|d)?)\b/gi, "attack"],
+      [
+        /\b(blood|bloody|bleeding|gore|gory|mutilated|dismembered|corpse|corpses|dead bodies?|severed)\b/gi,
+        "aftermath",
+      ],
+      [
+        /\b(kill(s|ing|ed)?|murder(s|ing|ed)?|slaughter(s|ing|ed)?|massacre(s|d)?|stab(s|bing|bed)?|torture(s|d)?)\b/gi,
+        "attack",
+      ],
       [/\b(naked|nude|nudity|topless|lingerie|seductive|sensual|erotic)\b/gi, "fully clothed"],
       [/\b(child|children|kid|kids|toddler|infant|baby)\b/gi, "young person"],
       [/\([^)]*\)/g, " "],
     ];
     let out = base;
     for (const [re, to] of soft) out = out.replace(re, to);
-    return out.replace(/\s{2,}/g, " ").trim().slice(0, 500);
+    return out
+      .replace(/\s{2,}/g, " ")
+      .trim()
+      .slice(0, 500);
   }
 
   // 3 — plain: one short English sentence built from the subject words.
@@ -935,7 +951,11 @@ export function promptVariant(prompt: string, level: number, line?: string): str
   // only usable when it is English — the image engine cannot read Hindi, and
   // feeding it Devanagari drew scenes unrelated to the story.
   const src = line && isEnglishish(line) ? line : base;
-  const raw = src.replace(/["“”'’]/g, " ").replace(/\s{2,}/g, " ").trim().slice(0, 200);
+  const raw = src
+    .replace(/["“”'’]/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+    .slice(0, 200);
   return `A detailed full-colour webtoon illustration, fully drawn background, clear natural lighting, showing: ${raw}`;
 }
 
@@ -986,8 +1006,6 @@ export async function renderPanel(
 
   throw new Error(`Image generation failed after ${tries} tries — ${errors.slice(-2).join(" | ")}`);
 }
-
-
 
 /* ------------------------------------------------------------------ */
 /* Post-render review                                                  */
