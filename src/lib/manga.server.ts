@@ -280,9 +280,14 @@ const PROMPT_SYSTEM =
    "drawn middle-aged. Add the visible age markers the bible implies (wrinkles and grey hair for the elderly, small " +
    "childlike stature and round face for a child). For unnamed side characters, state one explicit age and keep it " +
    "consistent for the whole story.\n" +
-  "- TWO OR MORE PEOPLE IN FRAME (critical): name each person separately with their gender and own distinct traits and " +
-  "say where each one stands. Never write 'two figures' or 'the two of them', and never let one character's hair, " +
-  "clothing or body type bleed onto the other.\n" +
+   "- TWO OR MORE PEOPLE IN FRAME (critical): name each person separately with their gender, their own EXACT age and " +
+   "their own distinct traits, and say where each one stands. Never write 'two figures' or 'the two of them', and " +
+   "never let one character's hair, clothing, age or body type bleed onto the other.\n" +
+   "- MIXED PAIRS (critical): when two people in one frame differ in age or gender, write the CONTRAST explicitly " +
+   "next to both of them — 'Ravi, a clearly MALE elderly man with deep wrinkles and white hair, beside Meena, a " +
+   "clearly FEMALE 8-year-old girl, small and round-faced'. Never make a young character look the same age as the " +
+   "older one beside them, never age a child up or an elder down to match the other person, and never draw a male " +
+   "character feminine (or a female one masculine) just because they share the frame with the opposite gender.\n" +
   "- HEAD COUNT: state explicitly how many people are in frame and that nobody else is present.\n" +
   "- Exactly one scene, one moment, one instance of each character. Never ask for multiple panels, insets or collages.\n" +
   "- NO-CHARACTER LINES (critical): if the line describes only a place, an object, the sky, weather or a phenomenon and " +
