@@ -632,13 +632,17 @@ export function enforceGender(prompt: string, bible?: string): string {
     }
   }
 
-  // Stamp the gender next to each name so the renderer cannot misread it.
+  // Stamp the gender AND the fixed age next to each name so the renderer
+  // cannot misread either — age drift (young drawn old and back) was a top
+  // complaint.
   for (const e of present) {
     const g = genderOf(e.traits)!;
     const noun = g === "male" ? "male man" : "female woman";
+    const age = ageOf(e.traits);
+    const tag = age ? `${noun}, ${age}` : noun;
     out = out.replace(
       new RegExp(`\\b${escapeRe(e.name)}\\b(?!\\s*\\((male|female)\\b)`, "g"),
-      `${e.name} (${noun})`,
+      `${e.name} (${tag})`,
     );
   }
 
