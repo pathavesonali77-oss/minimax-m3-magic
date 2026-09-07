@@ -6,19 +6,21 @@ import { fallbackChat, hasFallback } from "./text-fallback.server";
 const PIXAZO_URL = "https://gateway.pixazo.ai/flux-1-schnell/v1/getData";
 
 /**
- * Global art direction — the look of a professionally published full-colour
- * webtoon / manhwa page: crisp clean ink linework, flat cel shading with soft
- * gradient blush and highlights, expressive faces with large detailed eyes,
- * meticulously drawn painted backgrounds (architecture, furniture, props all
- * fully rendered), natural readable colour and light. No mood filter is
- * applied: the lighting is whatever the script line says it is.
+ * Global art direction — ONE fixed style for every single image: modern
+ * Japanese TV-anime. Every panel in a story must look like a frame from the
+ * same anime series, so the style block is identical on every render and the
+ * wording explicitly forbids the drift that used to appear (some panels
+ * realistic, some sketchy, some painterly). No mood filter is applied: the
+ * lighting is whatever the script line says it is.
  */
 export const STYLE =
-  "professional full-colour Korean webtoon manhwa art style, masterpiece quality, " +
-  "crisp clean confident ink outlines, flat cel shading with soft gradient blush and glossy hair highlights, " +
-  "expressive detailed faces with large finely drawn eyes, " +
-  "extremely detailed fully rendered background with every piece of architecture, furniture, prop and texture drawn out, " +
-  "rich natural colour palette, clear bright readable lighting, sharp focus, intricate details, 8k, best quality";
+  "modern Japanese anime style illustration, exact same anime art style in every image, " +
+  "2D hand-drawn anime look like a frame from a high-quality anime series, " +
+  "clean sharp anime line art, flat cel shading with simple soft gradients, " +
+  "anime character faces with large expressive anime eyes and anime hair, " +
+  "richly detailed anime background art with architecture, furniture, props and textures fully drawn, " +
+  "vibrant consistent anime colour palette, clear bright readable lighting, sharp focus, " +
+  "NOT realistic, NOT photorealistic, NOT 3D, NOT sketch, NOT pencil drawing, NOT oil painting, NOT western cartoon";
 
 /**
  * The single authoritative light statement for every panel: natural, faithful
@@ -188,7 +190,7 @@ function clean(v: string): string {
  */
 export async function buildCharacterBible(script: string): Promise<string> {
   const system =
-    "You are the art director of a full-colour webtoon (manhwa) adaptation. Read the WHOLE script (it may be " +
+    "You are the art director of a modern Japanese anime adaptation. Read the WHOLE script (it may be " +
     "Hinglish/Hindi) and list the recurring characters. For each, give ONE compact English line of FIXED, highly " +
     "specific visual traits usable verbatim inside an image prompt: age, gender, exact hair colour + length + style, " +
     "eye colour, skin tone, face shape, one distinguishing feature (scar, mole, glasses, bandage), build/height, and " +
@@ -227,10 +229,14 @@ export async function buildCharacterBible(script: string): Promise<string> {
 }
 
 const PROMPT_SYSTEM =
-  "You are the storyboard artist of a richly detailed full-colour webtoon (manhwa) adaptation. You are given a " +
+  "You are the storyboard artist of a richly detailed modern Japanese anime adaptation. You are given a " +
   "character bible and the COMPLETE script (Hindi/Hinglish/English), every line numbered with its timestamp. You are " +
   "then asked for a set of line numbers. For EACH requested number write ONE English image prompt that draws EXACTLY " +
   "WHAT THAT LINE LITERALLY DESCRIBES.\n" +
+  "TIMESTAMP FIDELITY (absolute): the prompt for a numbered line must show ONLY that line's own moment, place and " +
+  "action. Never draw a different timestamp's scene, never blend two timestamps into one image, and never repeat the " +
+  "previous or next line's scene. Before writing each prompt, re-read THAT line and take its setting, people and " +
+  "action from its own words.\n" +
   "EVERY prompt must contain, in this order: (1) the place/setting the line itself describes, (2) who or what is in " +
   "frame — with bible traits woven inline ONLY for characters the line itself is about; if the line involves no person, " +
   "the shot has no people at all, (3) the exact action, body pose and facial expression, (4) 4-6 concrete environmental " +
@@ -368,6 +374,16 @@ export async function writePrompts(
     const looksRelative =
       overlap === 0 ||
       (want[0] !== 1 && entries.length === want.length && entries.every((e, i) => e.n === i + 1));
+    // Timestamp fidelity gate: accept a prompt only when it shares a content
+    // word with its OWN script line (checked for English lines; Hindi lines
+    // cannot be word-matched, so they pass through). A prompt written from a
+    // different timestamp is rejected here so the repair passes re-ask for
+    // that specific line instead of drawing the wrong scene.
+    const accept = (n: number, text: string) => {
+      const seg = all[n - 1];
+      if (seg && isEnglishish(seg.text) && !mentionsLine(text, seg.text)) return;
+      byNumber.set(n, text);
+    };
     if (looksRelative) {
       if (entries.length !== want.length) {
         console.error(
@@ -375,10 +391,10 @@ export async function writePrompts(
         );
         return;
       }
-      entries.forEach((e, i) => byNumber.set(want[i] as number, e.text));
+      entries.forEach((e, i) => accept(want[i] as number, e.text));
       return;
     }
-    for (const e of entries) if (wantSet.has(e.n)) byNumber.set(e.n, e.text);
+    for (const e of entries) if (wantSet.has(e.n)) accept(e.n, e.text);
   };
 
   try {
@@ -412,7 +428,15 @@ export async function writePrompts(
   const built = wanted.map((n, i) => {
     const seg = all[n - 1] as Segment;
     const own = byNumber.get(n);
-    if (own) return sanitizePrompt(own);
+    // Timestamp fidelity: a prompt that shares no content word with its OWN
+    // line was written from some other part of the script. Reject it so the
+    // repair path (or the neighbour hold) replaces it instead of drawing a
+    // scene from the wrong timestamp.
+    if (own && isEnglishish(seg.text) && !mentionsLine(own, seg.text)) {
+      byNumber.delete(n);
+    } else if (own) {
+      return sanitizePrompt(own);
+    }
     if (isEnglishish(seg.text)) return sanitizePrompt(fallbackPrompt(seg));
     // Non-English line with no written prompt: hold on the nearest neighbour's
     // written prompt (same scene, same characters) rather than drawing garbage.
@@ -448,6 +472,55 @@ export function isEnglishish(s: string): boolean {
   return latin / letters.length >= 0.85;
 }
 
+/**
+ * True when a written image prompt shares at least one meaningful word with
+ * the script line it belongs to. A prompt that shares nothing was almost
+ * certainly written from a different timestamp, so the caller rejects it.
+ */
+export function mentionsLine(prompt: string, line: string): boolean {
+  const stop = new Set([
+    "this",
+    "that",
+    "with",
+    "from",
+    "then",
+    "than",
+    "they",
+    "them",
+    "their",
+    "there",
+    "here",
+    "when",
+    "what",
+    "into",
+    "over",
+    "under",
+    "about",
+    "have",
+    "has",
+    "had",
+    "were",
+    "was",
+    "are",
+    "and",
+    "the",
+    "his",
+    "her",
+    "him",
+    "she",
+    "but",
+    "not",
+  ]);
+  const words = line
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 4 && !stop.has(w));
+  if (words.length === 0) return true;
+  const p = prompt.toLowerCase();
+  return words.some((w) => p.includes(w));
+}
+
 function fallbackPrompt(s: Segment, action?: string): string {
   const moment = action ? action : s.text;
   // The image engine cannot read Hindi/Devanagari: feeding it the raw line
@@ -458,7 +531,7 @@ function fallbackPrompt(s: Segment, action?: string): string {
     );
   }
   return (
-    "A single richly detailed full-colour webtoon scene in clear natural lighting, with a fully drawn background, " +
+    "A single richly detailed modern Japanese anime style scene in clear natural lighting, with a fully drawn background, " +
     `depicting this exact story moment: ${moment}`
   );
 }
@@ -783,7 +856,7 @@ export function composeImagePrompt(prompt: string, bible?: string): string {
   // multi-character lock from turning an unrelated line into a cast portrait.
   return (
     `THIS EXACT STORY MOMENT: ${fixed}. ` +
-    `${lock ? lock + " " : ""}Full-colour webtoon manhwa style illustration, highly detailed. ${TONE_LOCK}. ${STYLE}, ${NO_TEXT_GUARD}. ` +
+    `${lock ? lock + " " : ""}Modern Japanese anime style illustration, highly detailed. ${TONE_LOCK}. ${STYLE}, ${NO_TEXT_GUARD}. ` +
     `${peopled ? `${CAST_GUARD}. ${ANATOMY_GUARD}` : NO_PEOPLE_GUARD}. ${SINGLE_PANEL_GUARD}. ` +
     `16:9 widescreen cinematic framing.`
   );
@@ -944,7 +1017,10 @@ export function promptVariant(prompt: string, level: number, line?: string): str
   // 3 — plain: one short English sentence built from the subject words.
   if (level === 3) {
     const head = base.split(/(?<=[.!?])\s+/)[0] ?? base;
-    return `A detailed full-colour webtoon illustration of this moment: ${head}`.slice(0, 320);
+    return `A detailed modern Japanese anime style illustration of this moment: ${head}`.slice(
+      0,
+      320,
+    );
   }
 
   // 4+ — last resort: a short neutral description. The script line itself is
@@ -956,7 +1032,7 @@ export function promptVariant(prompt: string, level: number, line?: string): str
     .replace(/\s{2,}/g, " ")
     .trim()
     .slice(0, 200);
-  return `A detailed full-colour webtoon illustration, fully drawn background, clear natural lighting, showing: ${raw}`;
+  return `A detailed modern Japanese anime style illustration, fully drawn background, clear natural lighting, showing: ${raw}`;
 }
 
 /**
@@ -1012,7 +1088,7 @@ export async function renderPanel(
 /* ------------------------------------------------------------------ */
 
 const REVIEW_SYSTEM =
-  "You are a manhwa storyboard editor. You are given one script line and the image prompt that was rendered for it. " +
+  "You are an anime storyboard editor. You are given one script line and the image prompt that was rendered for it. " +
   "Judge whether the rendered panel matches the line: correct setting, correct people (right count and gender), " +
   "the action the line describes, no text/speech bubbles, no literal metaphors (no flames, glowing organs, x-ray bodies), " +
   "and no contradiction with the character sheet. " +
