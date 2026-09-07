@@ -6,19 +6,21 @@ import { fallbackChat, hasFallback } from "./text-fallback.server";
 const PIXAZO_URL = "https://gateway.pixazo.ai/flux-1-schnell/v1/getData";
 
 /**
- * Global art direction — the look of a professionally published full-colour
- * webtoon / manhwa page: crisp clean ink linework, flat cel shading with soft
- * gradient blush and highlights, expressive faces with large detailed eyes,
- * meticulously drawn painted backgrounds (architecture, furniture, props all
- * fully rendered), natural readable colour and light. No mood filter is
- * applied: the lighting is whatever the script line says it is.
+ * Global art direction — ONE fixed style for every single image: modern
+ * Japanese TV-anime. Every panel in a story must look like a frame from the
+ * same anime series, so the style block is identical on every render and the
+ * wording explicitly forbids the drift that used to appear (some panels
+ * realistic, some sketchy, some painterly). No mood filter is applied: the
+ * lighting is whatever the script line says it is.
  */
 export const STYLE =
-  "professional full-colour Korean webtoon manhwa art style, masterpiece quality, " +
-  "crisp clean confident ink outlines, flat cel shading with soft gradient blush and glossy hair highlights, " +
-  "expressive detailed faces with large finely drawn eyes, " +
-  "extremely detailed fully rendered background with every piece of architecture, furniture, prop and texture drawn out, " +
-  "rich natural colour palette, clear bright readable lighting, sharp focus, intricate details, 8k, best quality";
+  "modern Japanese anime style illustration, exact same anime art style in every image, " +
+  "2D hand-drawn anime look like a frame from a high-quality anime series, " +
+  "clean sharp anime line art, flat cel shading with simple soft gradients, " +
+  "anime character faces with large expressive anime eyes and anime hair, " +
+  "richly detailed anime background art with architecture, furniture, props and textures fully drawn, " +
+  "vibrant consistent anime colour palette, clear bright readable lighting, sharp focus, " +
+  "NOT realistic, NOT photorealistic, NOT 3D, NOT sketch, NOT pencil drawing, NOT oil painting, NOT western cartoon";
 
 /**
  * The single authoritative light statement for every panel: natural, faithful
