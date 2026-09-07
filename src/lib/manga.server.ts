@@ -374,6 +374,16 @@ export async function writePrompts(
     const looksRelative =
       overlap === 0 ||
       (want[0] !== 1 && entries.length === want.length && entries.every((e, i) => e.n === i + 1));
+    // Timestamp fidelity gate: accept a prompt only when it shares a content
+    // word with its OWN script line (checked for English lines; Hindi lines
+    // cannot be word-matched, so they pass through). A prompt written from a
+    // different timestamp is rejected here so the repair passes re-ask for
+    // that specific line instead of drawing the wrong scene.
+    const accept = (n: number, text: string) => {
+      const seg = all[n - 1];
+      if (seg && isEnglishish(seg.text) && !mentionsLine(text, seg.text)) return;
+      byNumber.set(n, text);
+    };
     if (looksRelative) {
       if (entries.length !== want.length) {
         console.error(
@@ -381,10 +391,10 @@ export async function writePrompts(
         );
         return;
       }
-      entries.forEach((e, i) => byNumber.set(want[i] as number, e.text));
+      entries.forEach((e, i) => accept(want[i] as number, e.text));
       return;
     }
-    for (const e of entries) if (wantSet.has(e.n)) byNumber.set(e.n, e.text);
+    for (const e of entries) if (wantSet.has(e.n)) accept(e.n, e.text);
   };
 
   try {
