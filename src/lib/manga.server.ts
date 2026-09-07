@@ -418,7 +418,15 @@ export async function writePrompts(
   const built = wanted.map((n, i) => {
     const seg = all[n - 1] as Segment;
     const own = byNumber.get(n);
-    if (own) return sanitizePrompt(own);
+    // Timestamp fidelity: a prompt that shares no content word with its OWN
+    // line was written from some other part of the script. Reject it so the
+    // repair path (or the neighbour hold) replaces it instead of drawing a
+    // scene from the wrong timestamp.
+    if (own && isEnglishish(seg.text) && !mentionsLine(own, seg.text)) {
+      byNumber.delete(n);
+    } else if (own) {
+      return sanitizePrompt(own);
+    }
     if (isEnglishish(seg.text)) return sanitizePrompt(fallbackPrompt(seg));
     // Non-English line with no written prompt: hold on the nearest neighbour's
     // written prompt (same scene, same characters) rather than drawing garbage.
