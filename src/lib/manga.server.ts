@@ -190,7 +190,7 @@ function clean(v: string): string {
  */
 export async function buildCharacterBible(script: string): Promise<string> {
   const system =
-    "You are the art director of a full-colour webtoon (manhwa) adaptation. Read the WHOLE script (it may be " +
+    "You are the art director of a modern Japanese anime adaptation. Read the WHOLE script (it may be " +
     "Hinglish/Hindi) and list the recurring characters. For each, give ONE compact English line of FIXED, highly " +
     "specific visual traits usable verbatim inside an image prompt: age, gender, exact hair colour + length + style, " +
     "eye colour, skin tone, face shape, one distinguishing feature (scar, mole, glasses, bandage), build/height, and " +
