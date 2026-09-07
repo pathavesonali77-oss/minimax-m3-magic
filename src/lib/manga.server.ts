@@ -479,9 +479,37 @@ export function isEnglishish(s: string): boolean {
  */
 export function mentionsLine(prompt: string, line: string): boolean {
   const stop = new Set([
-    "this", "that", "with", "from", "then", "than", "they", "them", "their", "there",
-    "here", "when", "what", "into", "over", "under", "about", "have", "has", "had",
-    "were", "was", "are", "and", "the", "his", "her", "him", "she", "but", "not",
+    "this",
+    "that",
+    "with",
+    "from",
+    "then",
+    "than",
+    "they",
+    "them",
+    "their",
+    "there",
+    "here",
+    "when",
+    "what",
+    "into",
+    "over",
+    "under",
+    "about",
+    "have",
+    "has",
+    "had",
+    "were",
+    "was",
+    "are",
+    "and",
+    "the",
+    "his",
+    "her",
+    "him",
+    "she",
+    "but",
+    "not",
   ]);
   const words = line
     .toLowerCase()
@@ -989,7 +1017,10 @@ export function promptVariant(prompt: string, level: number, line?: string): str
   // 3 — plain: one short English sentence built from the subject words.
   if (level === 3) {
     const head = base.split(/(?<=[.!?])\s+/)[0] ?? base;
-    return `A detailed modern Japanese anime style illustration of this moment: ${head}`.slice(0, 320);
+    return `A detailed modern Japanese anime style illustration of this moment: ${head}`.slice(
+      0,
+      320,
+    );
   }
 
   // 4+ — last resort: a short neutral description. The script line itself is
