@@ -462,6 +462,27 @@ export function isEnglishish(s: string): boolean {
   return latin / letters.length >= 0.85;
 }
 
+/**
+ * True when a written image prompt shares at least one meaningful word with
+ * the script line it belongs to. A prompt that shares nothing was almost
+ * certainly written from a different timestamp, so the caller rejects it.
+ */
+export function mentionsLine(prompt: string, line: string): boolean {
+  const stop = new Set([
+    "this", "that", "with", "from", "then", "than", "they", "them", "their", "there",
+    "here", "when", "what", "into", "over", "under", "about", "have", "has", "had",
+    "were", "was", "are", "and", "the", "his", "her", "him", "she", "but", "not",
+  ]);
+  const words = line
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 4 && !stop.has(w));
+  if (words.length === 0) return true;
+  const p = prompt.toLowerCase();
+  return words.some((w) => p.includes(w));
+}
+
 function fallbackPrompt(s: Segment, action?: string): string {
   const moment = action ? action : s.text;
   // The image engine cannot read Hindi/Devanagari: feeding it the raw line
