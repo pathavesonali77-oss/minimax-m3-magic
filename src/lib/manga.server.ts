@@ -6,21 +6,16 @@ import { fallbackChat, hasFallback } from "./text-fallback.server";
 const PIXAZO_URL = "https://gateway.pixazo.ai/flux-1-schnell/v1/getData";
 
 /**
- * Global art direction — ONE fixed style for every single image: modern
- * Japanese TV-anime. Every panel in a story must look like a frame from the
- * same anime series, so the style block is identical on every render and the
- * wording explicitly forbids the drift that used to appear (some panels
- * realistic, some sketchy, some painterly). No mood filter is applied: the
- * lighting is whatever the script line says it is.
+ * Renderer-only art direction. The writing model describes only scene content;
+ * this exact block is added at the final Pixazo request for every image.
+ * Flux has no negative-prompt channel, so this stays entirely positive: naming
+ * unwanted media such as photography or pencil sketches can make Flux draw them.
  */
 export const STYLE =
-  "modern Japanese anime style illustration, exact same anime art style in every image, " +
-  "2D hand-drawn anime look like a frame from a high-quality anime series, " +
-  "clean sharp anime line art, flat cel shading with simple soft gradients, " +
-  "anime character faces with large expressive anime eyes and anime hair, " +
-  "richly detailed anime background art with architecture, furniture, props and textures fully drawn, " +
-  "vibrant consistent anime colour palette, clear bright readable lighting, sharp focus, " +
-  "NOT realistic, NOT photorealistic, NOT 3D, NOT sketch, NOT pencil drawing, NOT oil painting, NOT western cartoon";
+  "FIXED VISUAL STYLE: polished 2D Japanese television anime frame, crisp uniform ink linework, " +
+  "clean cel shading, restrained soft gradient highlights, expressive anime facial design, " +
+  "consistent character proportions, richly painted anime background, vivid balanced colours, " +
+  "sharp finished production artwork";
 
 /**
  * The single authoritative light statement for every panel: natural, faithful
@@ -190,7 +185,7 @@ function clean(v: string): string {
  */
 export async function buildCharacterBible(script: string): Promise<string> {
   const system =
-    "You are the art director of a modern Japanese anime adaptation. Read the WHOLE script (it may be " +
+    "You are a character continuity editor. Read the WHOLE script (it may be " +
     "Hinglish/Hindi) and list the recurring characters. For each, give ONE compact English line of FIXED, highly " +
     "specific visual traits usable verbatim inside an image prompt: age, gender, exact hair colour + length + style, " +
     "eye colour, skin tone, face shape, one distinguishing feature (scar, mole, glasses, bandage), build/height, and " +
@@ -229,7 +224,8 @@ export async function buildCharacterBible(script: string): Promise<string> {
 }
 
 const PROMPT_SYSTEM =
-  "You are the storyboard artist of a richly detailed modern Japanese anime adaptation. You are given a " +
+  "You are a storyboard writer. Describe scene CONTENT only; do not name or request any art style, medium, rendering " +
+  "technique or visual genre because the image renderer applies one fixed style separately. You are given a " +
   "character bible and the COMPLETE script (Hindi/Hinglish/English), every line numbered with its timestamp. You are " +
   "then asked for a set of line numbers. For EACH requested number write ONE English image prompt that draws EXACTLY " +
   "WHAT THAT LINE LITERALLY DESCRIBES.\n" +
@@ -457,8 +453,8 @@ export async function writePrompts(
  * previous illustration" to EVERY panel. On a narrator-heavy script that forced
  * every line — demons in Busan, an army mobilising, backstory from another era —
  * to be redrawn as the previous panel's couple standing in the previous
- * panel's room. Each panel now stands on its own: only the ART STYLE is shared,
- * and that already comes from composeImagePrompt's style block.
+ * panel's room. Each panel now stands on its own; the renderer applies the
+ * shared art style only after these content prompts are written.
  */
 export function chainContinuity(prompts: string[]): string[] {
   return prompts;
@@ -531,7 +527,7 @@ function fallbackPrompt(s: Segment, action?: string): string {
     );
   }
   return (
-    "A single richly detailed modern Japanese anime style scene in clear natural lighting, with a fully drawn background, " +
+    "A single detailed scene in clear natural lighting, with a fully drawn background, " +
     `depicting this exact story moment: ${moment}`
   );
 }
@@ -851,12 +847,12 @@ export function composeImagePrompt(prompt: string, bible?: string): string {
   const peopled = hasPeople(fixed, bible);
   // Character lock only matters when someone is actually in frame.
   const lock = peopled ? characterLock(fixed, bible) : "";
-  // Flux weights early tokens most. The timestamp-specific scene and action
-  // therefore come first; identity is compact and secondary. This prevents a
-  // multi-character lock from turning an unrelated line into a cast portrait.
+  // This is the only place art style is introduced. It is deliberately first
+  // because Flux weights early tokens most; the exact timestamp scene follows
+  // immediately, before the secondary character continuity details.
   return (
-    `THIS EXACT STORY MOMENT: ${fixed}. ` +
-    `${lock ? lock + " " : ""}Modern Japanese anime style illustration, highly detailed. ${TONE_LOCK}. ${STYLE}, ${NO_TEXT_GUARD}. ` +
+    `${STYLE}. THIS EXACT STORY MOMENT: ${fixed}. ` +
+    `${lock ? lock + " " : ""}${TONE_LOCK}. ${NO_TEXT_GUARD}. ` +
     `${peopled ? `${CAST_GUARD}. ${ANATOMY_GUARD}` : NO_PEOPLE_GUARD}. ${SINGLE_PANEL_GUARD}. ` +
     `16:9 widescreen cinematic framing.`
   );
@@ -1017,10 +1013,7 @@ export function promptVariant(prompt: string, level: number, line?: string): str
   // 3 — plain: one short English sentence built from the subject words.
   if (level === 3) {
     const head = base.split(/(?<=[.!?])\s+/)[0] ?? base;
-    return `A detailed modern Japanese anime style illustration of this moment: ${head}`.slice(
-      0,
-      320,
-    );
+    return `A detailed illustration of this exact moment: ${head}`.slice(0, 320);
   }
 
   // 4+ — last resort: a short neutral description. The script line itself is
@@ -1032,7 +1025,7 @@ export function promptVariant(prompt: string, level: number, line?: string): str
     .replace(/\s{2,}/g, " ")
     .trim()
     .slice(0, 200);
-  return `A detailed modern Japanese anime style illustration, fully drawn background, clear natural lighting, showing: ${raw}`;
+  return `A detailed scene with a fully drawn background and clear natural lighting, showing: ${raw}`;
 }
 
 /**
@@ -1088,7 +1081,7 @@ export async function renderPanel(
 /* ------------------------------------------------------------------ */
 
 const REVIEW_SYSTEM =
-  "You are an anime storyboard editor. You are given one script line and the image prompt that was rendered for it. " +
+  "You are a storyboard continuity editor. You are given one script line and the image prompt that was rendered for it. " +
   "Judge whether the rendered panel matches the line: correct setting, correct people (right count and gender), " +
   "the action the line describes, no text/speech bubbles, no literal metaphors (no flames, glowing organs, x-ray bodies), " +
   "and no contradiction with the character sheet. " +
