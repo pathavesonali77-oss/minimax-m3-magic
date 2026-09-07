@@ -464,7 +464,7 @@ function fallbackPrompt(s: Segment, action?: string): string {
     );
   }
   return (
-    "A single richly detailed full-colour webtoon scene in clear natural lighting, with a fully drawn background, " +
+    "A single richly detailed modern Japanese anime style scene in clear natural lighting, with a fully drawn background, " +
     `depicting this exact story moment: ${moment}`
   );
 }
@@ -789,7 +789,7 @@ export function composeImagePrompt(prompt: string, bible?: string): string {
   // multi-character lock from turning an unrelated line into a cast portrait.
   return (
     `THIS EXACT STORY MOMENT: ${fixed}. ` +
-    `${lock ? lock + " " : ""}Full-colour webtoon manhwa style illustration, highly detailed. ${TONE_LOCK}. ${STYLE}, ${NO_TEXT_GUARD}. ` +
+    `${lock ? lock + " " : ""}Modern Japanese anime style illustration, highly detailed. ${TONE_LOCK}. ${STYLE}, ${NO_TEXT_GUARD}. ` +
     `${peopled ? `${CAST_GUARD}. ${ANATOMY_GUARD}` : NO_PEOPLE_GUARD}. ${SINGLE_PANEL_GUARD}. ` +
     `16:9 widescreen cinematic framing.`
   );
@@ -950,7 +950,7 @@ export function promptVariant(prompt: string, level: number, line?: string): str
   // 3 — plain: one short English sentence built from the subject words.
   if (level === 3) {
     const head = base.split(/(?<=[.!?])\s+/)[0] ?? base;
-    return `A detailed full-colour webtoon illustration of this moment: ${head}`.slice(0, 320);
+    return `A detailed modern Japanese anime style illustration of this moment: ${head}`.slice(0, 320);
   }
 
   // 4+ — last resort: a short neutral description. The script line itself is
@@ -962,7 +962,7 @@ export function promptVariant(prompt: string, level: number, line?: string): str
     .replace(/\s{2,}/g, " ")
     .trim()
     .slice(0, 200);
-  return `A detailed full-colour webtoon illustration, fully drawn background, clear natural lighting, showing: ${raw}`;
+  return `A detailed modern Japanese anime style illustration, fully drawn background, clear natural lighting, showing: ${raw}`;
 }
 
 /**
@@ -1018,7 +1018,7 @@ export async function renderPanel(
 /* ------------------------------------------------------------------ */
 
 const REVIEW_SYSTEM =
-  "You are a manhwa storyboard editor. You are given one script line and the image prompt that was rendered for it. " +
+  "You are an anime storyboard editor. You are given one script line and the image prompt that was rendered for it. " +
   "Judge whether the rendered panel matches the line: correct setting, correct people (right count and gender), " +
   "the action the line describes, no text/speech bubbles, no literal metaphors (no flames, glowing organs, x-ray bodies), " +
   "and no contradiction with the character sheet. " +
